@@ -54,3 +54,6 @@ if TELEGRAM_API_KEY and WEBHOOK_HOST:
     # Set webhook
     bot.remove_webhook()
     bot.set_webhook(url='https://{}/{}'.format(WEBHOOK_HOST, TELEGRAM_API_KEY))
+
+if __name__ == '__main__':
+    app.run()
