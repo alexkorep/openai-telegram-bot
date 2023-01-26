@@ -28,7 +28,7 @@ def telegram_webhook():
     user_username = message.from_user.username
     if not is_allowed_username(user_username):
         bot.send_message(chat_dest, 'Sorry, you are not allowed to use this bot.')
-        return
+        return "", 200
 
     openai.api_key = os.environ.get('OPENAI_API_KEY')
     response = openai.Completion.create(
