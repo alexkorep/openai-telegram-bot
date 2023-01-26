@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, abort
+from flask import Flask, request
 import telebot
 import openai
 
@@ -7,6 +7,7 @@ import openai
 TELEGRAM_API_KEY = os.environ.get('TELEGRAM_API_KEY')
 
 WEBHOOK_HOST = os.environ.get('WEBHOOK_HOST')
+WEBHOOK_URL = 'https://{}/{}'.format(WEBHOOK_HOST, TELEGRAM_API_KEY)
 
 bot = telebot.TeleBot(TELEGRAM_API_KEY)
 app = Flask(__name__)
@@ -21,15 +22,7 @@ def index():
 def telegram_webhook():
     json_string = request.get_data().decode('utf-8')
     update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "", 200
-
-def is_allowed_username(username):
-    username_list = os.environ.get('ALLOWED_USERNAMES', '').split(',')
-    return username in username_list
-
-@bot.message_handler(func=lambda message: True, content_types=['text'])
-def echo_message(message):
+    message = update.message
     chat_dest = message.chat.id
     user_msg = message.text
     user_username = message.from_user.username
@@ -49,11 +42,13 @@ def echo_message(message):
     )
     text = response.choices[0].text
     bot.send_message(chat_dest, text)
+    return "", 200
+
+def is_allowed_username(username):
+    username_list = os.environ.get('ALLOWED_USERNAMES', '').split(',')
+    return username in username_list
 
 if TELEGRAM_API_KEY and WEBHOOK_HOST:
     # Set webhook
     bot.remove_webhook()
-    bot.set_webhook(url='https://{}/{}'.format(WEBHOOK_HOST, TELEGRAM_API_KEY))
-
-if __name__ == '__main__':
-    app.run()
+    bot.set_webhook(url=WEBHOOK_URL)

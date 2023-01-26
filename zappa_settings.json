@@ -1,6 +1,6 @@
 {
     "production": {
-        "app_function": "bot.run",
+        "app_function": "app.app",
         "aws_region": "us-east-1",
         "profile_name": "default",
         "project_name": "openai-telegram",
