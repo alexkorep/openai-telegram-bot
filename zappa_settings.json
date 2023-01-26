@@ -5,6 +5,9 @@
         "profile_name": "default",
         "project_name": "openai-telegram",
         "runtime": "python3.8",
-        "s3_bucket": "zappa-8mo18vdhd"
+        "s3_bucket": "zappa-8mo18vdhd",
+        "memory_size": 128,
+        "log_level": "ERROR",
+        "keep_warm": false
     }
 }
