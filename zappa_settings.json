@@ -1,0 +1,10 @@
+{
+    "production": {
+        "app_function": "bot.run",
+        "aws_region": "us-east-1",
+        "profile_name": "default",
+        "project_name": "openai-telegram",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-8mo39vdhd"
+    }
+}
