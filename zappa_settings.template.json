@@ -1,0 +1,26 @@
+{
+    "production": {
+        "app_function": "app.app",
+        "aws_region": "us-east-1",
+        "profile_name": "default",
+        "project_name": "openai-telegram",
+        "runtime": "python3.8",
+        "s3_bucket": "zappa-<RANDOM STRING>",
+        "memory_size": 128,
+        "log_level": "ERROR",
+        "keep_warm": false,
+        "aws_environment_variables": {
+            "SQS_QUEUE_NAME": "<SQS NAME>"
+        },
+        "events": [
+            {
+                "function": "app.process_messages",
+                "event_source": {
+                    "arn": "<SQS ARN, should correspond to SQS_QUEUE_NAME env var>",
+                    "batch_size": 1,
+                    "enabled": true
+                }
+            }
+        ]
+    }
+}
