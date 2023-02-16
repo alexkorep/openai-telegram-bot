@@ -29,6 +29,9 @@ def telegram_webhook():
     json_string = request.get_data().decode("utf-8")
     update = telebot.types.Update.de_json(json_string)
     message = update.message
+    if not message:
+        return "", 200
+
     chat_dest = message.chat.id
     user_msg = message.text
     user_username = message.from_user.username
@@ -72,12 +75,6 @@ def send_message_to_queue(msg, queue_name):
 
 
 def process_messages(event, context):
-    print(f"event: {event}")
-    print(f"context: {context}")
-    print(f"Message Body: {event['Records'][0]['body']}")
-    # if "messageAttributes" in event["Records"][0]:
-    #     print(f"Message Attributes: {event['Records'][0]['messageAttributes']}")
-
     body = json.loads(event["Records"][0]["body"])
     user_msg = body["user_msg"]
     chat_dest = body["chat_dest"]
