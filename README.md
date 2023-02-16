@@ -2,7 +2,14 @@
 
 OpenAI Chat Telegram Bot
 
-# Configuration
+## Configuration
+
+### Zappa configuration
+
+Rename `zappa_settings.template.json` to `zappa_settings.json` and update the parameters like
+`arn`, `s3_bucket`, `aws_region`.
+
+### Bot configuration
 
 1. Obtain Open AI key at https://beta.openai.com/account/api-keys, put it to
    OPENAI_API_KEY environment variable
@@ -11,7 +18,7 @@ OpenAI Chat Telegram Bot
 3. Put comma-separated list of Telegram usernames for people who's
    allowed to use the bot to ALLOWED_USERNAMES environment variable
 
-# Running locally
+## Running locally
 
 1. Setup ngrok: `ngrok http 5001`
 

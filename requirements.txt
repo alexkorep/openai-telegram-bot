@@ -2,3 +2,4 @@ Flask==2.2.2
 pyTelegramBotAPI==4.9.0
 openai==0.26.3
 zappa==0.56.1
+boto3==1.26.72
