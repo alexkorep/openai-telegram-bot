@@ -4,6 +4,11 @@ import telebot
 import openai
 import boto3
 import json
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 TELEGRAM_API_KEY = os.environ.get("TELEGRAM_API_KEY")
 
@@ -13,6 +18,7 @@ WEBHOOK_URL = "https://{}/{}".format(WEBHOOK_HOST, TELEGRAM_API_KEY)
 SQS_QUEUE_NAME = os.environ.get(
     "SQS_QUEUE_NAME"
 )  # should be the same as in Zappa settings
+USE_SQS = os.environ.get("USE_SQS", "True").lower() == "true"
 
 bot = telebot.TeleBot(TELEGRAM_API_KEY)
 app = Flask(__name__)
@@ -41,13 +47,14 @@ def telegram_webhook():
 
     bot.send_chat_action(chat_id=chat_dest, action="typing", timeout=10)
 
-    send_message_to_queue(
-        {
-            "chat_dest": chat_dest,
-            "user_msg": user_msg,
-        },
-        SQS_QUEUE_NAME,
-    )
+    body = {
+        "chat_dest": chat_dest,
+        "user_msg": user_msg,
+    }
+    if USE_SQS:
+        send_message_to_queue(body, SQS_QUEUE_NAME)
+    else:
+        handle_message(body)
 
     return "", 200
 
@@ -76,20 +83,21 @@ def send_message_to_queue(msg, queue_name):
 
 def process_messages(event, context):
     body = json.loads(event["Records"][0]["body"])
+    handle_message(body)
+
+
+def handle_message(body):
     user_msg = body["user_msg"]
     chat_dest = body["chat_dest"]
 
     openai.api_key = os.environ.get("OPENAI_API_KEY")
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=user_msg,
-        temperature=0.7,
-        max_tokens=1751,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": user_msg},
+        ],
     )
-    text = response.choices[0].text
+    text = response.choices[0].message.content
     bot.send_message(chat_dest, text)
 
     return "OK"
