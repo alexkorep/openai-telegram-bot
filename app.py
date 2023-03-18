@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, abort
 import telebot
 import openai
 import boto3
@@ -31,13 +31,18 @@ def index():
 
 
 @app.route("/{}".format(TELEGRAM_API_KEY), methods=["POST"])
-def telegram_webhook():
-    json_string = request.get_data().decode("utf-8")
-    update = telebot.types.Update.de_json(json_string)
-    message = update.message
-    if not message:
-        return "", 200
+def webhook():
+    if request.headers.get("content-type") == "application/json":
+        json_string = request.get_data().decode("utf-8")
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ""
+    else:
+        abort(403)
 
+
+@bot.message_handler(content_types=["text"])
+def handle_text(message):
     chat_dest = message.chat.id
     user_msg = message.text
     user_username = message.from_user.username
@@ -57,6 +62,11 @@ def telegram_webhook():
         handle_message(body)
 
     return "", 200
+
+
+@bot.message_handler(content_types=["document", "audio", "voice"])
+def handle_docs_audio(message):
+    print("handle_docs_audio, message", message)
 
 
 def is_allowed_username(username):
