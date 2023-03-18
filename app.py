@@ -20,7 +20,7 @@ SQS_QUEUE_NAME = os.environ.get(
 )  # should be the same as in Zappa settings
 USE_SQS = os.environ.get("USE_SQS", "True").lower() == "true"
 
-bot = telebot.TeleBot(TELEGRAM_API_KEY)
+bot = telebot.TeleBot(TELEGRAM_API_KEY, threaded=False)
 app = Flask(__name__)
 sqs = boto3.resource("sqs")
 
