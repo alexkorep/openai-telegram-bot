@@ -41,10 +41,11 @@ def webhook():
         abort(403)
 
 
-@bot.message_handler(content_types=["text"])
+@bot.message_handler(content_types=["text", "audio", "voice"])
 def handle_text(message):
+    # print("message: ", message)
     chat_dest = message.chat.id
-    user_msg = message.text
+    content_type = message.content_type
     user_username = message.from_user.username
     if not is_allowed_username(user_username):
         bot.send_message(chat_dest, "Sorry, you are not allowed to use this bot.")
@@ -53,20 +54,22 @@ def handle_text(message):
     bot.send_chat_action(chat_id=chat_dest, action="typing", timeout=10)
 
     body = {
+        "content_type": content_type,
         "chat_dest": chat_dest,
-        "user_msg": user_msg,
     }
+    if content_type == "text":
+        body["text"] = message.text
+    if content_type == "audio":
+        body["file_id"] = message.audio.file_id
+    elif content_type == "voice":
+        body["file_id"] = message.voice.file_id
+
     if USE_SQS:
         send_message_to_queue(body, SQS_QUEUE_NAME)
     else:
         handle_message(body)
 
     return "", 200
-
-
-@bot.message_handler(content_types=["document", "audio", "voice"])
-def handle_docs_audio(message):
-    print("handle_docs_audio, message", message)
 
 
 def is_allowed_username(username):
@@ -92,24 +95,39 @@ def send_message_to_queue(msg, queue_name):
 
 
 def process_messages(event, context):
-    body = json.loads(event["Records"][0]["body"])
-    handle_message(body)
+    for record in event["Records"]:
+        body = json.loads(record["body"])
+        handle_message(body)
 
 
 def handle_message(body):
-    user_msg = body["user_msg"]
+    content_type = body["content_type"]
+    if content_type == "text":
+        handle_message_text(body)
+    elif content_type == "audio" or content_type == "voice":
+        handle_message_audio_or_voice(body)
+
+
+def handle_message_text(body):
+    text = body["text"]
     chat_dest = body["chat_dest"]
 
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": user_msg},
+            {"role": "user", "content": text},
         ],
     )
-    text = response.choices[0].message.content
-    bot.send_message(chat_dest, text)
+    content = response.choices[0].message.content
+    bot.send_message(chat_dest, content)
+    return "OK"
 
+
+def handle_message_audio_or_voice(body):
+    file_id = body["file_id"]
+    chat_dest = body["chat_dest"]
+    bot.send_message(chat_dest, "Sorry, I can't handle audio or voice messages yet.")
     return "OK"
 
 
