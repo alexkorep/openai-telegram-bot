@@ -35,18 +35,22 @@ def index():
 
 @app.route("/{}".format(TELEGRAM_API_KEY), methods=["POST"])
 def webhook():
-    if request.headers.get("content-type") == "application/json":
-        json_string = request.get_data().decode("utf-8")
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ""
-    else:
-        abort(403)
+    try:
+        if request.headers.get("content-type") == "application/json":
+            json_string = request.get_data().decode("utf-8")
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_updates([update])
+            return ""
+        else:
+            abort(200)
+    except Exception as e:
+        print(e)
+        abort(200)
+
 
 
 @bot.message_handler(content_types=["text", "audio", "voice"])
 def handle_text(message):
-    # print("message: ", message)
     chat_dest = message.chat.id
     content_type = message.content_type
     user_username = message.from_user.username
@@ -105,10 +109,14 @@ def process_messages(event, context):
 
 def handle_message(body):
     content_type = body["content_type"]
+    chat_dest = body["chat_dest"]
+
     if content_type == "text":
         handle_message_text(bot, openai, body)
     elif content_type == "audio" or content_type == "voice":
         handle_message_audio_or_voice(bot, openai, body)
+    else:
+        bot.send_message(chat_dest, "Sorry, this type of messages is not supported.")
 
 
 
