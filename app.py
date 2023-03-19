@@ -1,14 +1,17 @@
 import os
 from flask import Flask, request, abort
 import telebot
-import openai
 import boto3
 import json
 from dotenv import load_dotenv
+import openai
 
+from handle_audio import handle_message_audio_or_voice
+from handle_text import handle_message_text
 
 load_dotenv()
 
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 TELEGRAM_API_KEY = os.environ.get("TELEGRAM_API_KEY")
 
@@ -103,32 +106,10 @@ def process_messages(event, context):
 def handle_message(body):
     content_type = body["content_type"]
     if content_type == "text":
-        handle_message_text(body)
+        handle_message_text(bot, openai, body)
     elif content_type == "audio" or content_type == "voice":
-        handle_message_audio_or_voice(body)
+        handle_message_audio_or_voice(bot, openai, body)
 
-
-def handle_message_text(body):
-    text = body["text"]
-    chat_dest = body["chat_dest"]
-
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": text},
-        ],
-    )
-    content = response.choices[0].message.content
-    bot.send_message(chat_dest, content)
-    return "OK"
-
-
-def handle_message_audio_or_voice(body):
-    file_id = body["file_id"]
-    chat_dest = body["chat_dest"]
-    bot.send_message(chat_dest, "Sorry, I can't handle audio or voice messages yet.")
-    return "OK"
 
 
 if TELEGRAM_API_KEY and WEBHOOK_HOST:
