@@ -125,6 +125,7 @@ def handle_message(body):
 
 
 if TELEGRAM_API_KEY and WEBHOOK_HOST:
-    # Set webhook
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
+    webhook_info = bot.get_webhook_info()
+    if webhook_info.url != WEBHOOK_URL:
+        # Set webhook
+        bot.set_webhook(url=WEBHOOK_URL)
