@@ -60,21 +60,25 @@ def handle_text(message):
 
     bot.send_chat_action(chat_id=chat_dest, action="typing", timeout=10)
 
-    body = {
-        "content_type": content_type,
-        "chat_dest": chat_dest,
-    }
-    if content_type == "text":
-        body["text"] = message.text
-    if content_type == "audio":
-        body["file_id"] = message.audio.file_id
-    elif content_type == "voice":
-        body["file_id"] = message.voice.file_id
+    try:
+        body = {
+            "content_type": content_type,
+            "chat_dest": chat_dest,
+        }
+        if content_type == "text":
+            body["text"] = message.text
+        if content_type == "audio":
+            body["file_id"] = message.audio.file_id
+        elif content_type == "voice":
+            body["file_id"] = message.voice.file_id
 
-    if USE_SQS:
-        send_message_to_queue(body, SQS_QUEUE_NAME)
-    else:
-        handle_message(body)
+        if USE_SQS:
+            send_message_to_queue(body, SQS_QUEUE_NAME)
+        else:
+            handle_message(body)
+    except Exception as exc:
+        exception_text = f"Error processing message: {exc}"
+        bot.send_message(chat_dest, exception_text)
 
     return "", 200
 
