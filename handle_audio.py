@@ -1,11 +1,20 @@
 import tempfile
 import subprocess
 
+MAX_DURATION = 60 * 1  # 1 minute
+
 
 def handle_message_audio_or_voice(bot, openai, body):
     file_id = body["file_id"]
     file_url = bot.get_file_url(file_id)
     chat_dest = body["chat_dest"]
+    duration = body["duration"]
+    if duration > MAX_DURATION:
+        bot.send_message(
+            chat_dest,
+            f"Audio file too long, should be less than {MAX_DURATION} seconds",
+        )
+        return ""
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Generate a temporary file name in the temporary directory

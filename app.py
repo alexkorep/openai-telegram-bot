@@ -42,10 +42,10 @@ def webhook():
             bot.process_new_updates([update])
             return ""
         else:
-            abort(200)
+            return "OK"
     except Exception as e:
         print(e)
-        abort(200)
+        return "OK"
 
 
 
@@ -69,8 +69,10 @@ def handle_text(message):
             body["text"] = message.text
         if content_type == "audio":
             body["file_id"] = message.audio.file_id
+            body["duration"] = message.audio.duration
         elif content_type == "voice":
             body["file_id"] = message.voice.file_id
+            body["duration"] = message.voice.duration
 
         if USE_SQS:
             send_message_to_queue(body, SQS_QUEUE_NAME)
