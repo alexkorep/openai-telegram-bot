@@ -51,16 +51,4 @@ def handle_message_audio_or_voice(bot, openai, body):
         transcript = openai.Audio.transcribe("whisper-1", audio_file)
         print("transcript: ", transcript["text"])
         bot.send_message(chat_dest, transcript["text"])
-
-    # with urllib.request.urlopen(file_url) as response:
-    #     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-    #         tmp_file.write(response.read())
-    #         segment = AudioSegment.from_file(tmp_file.name)
-    #         with tempfile.NamedTemporaryFile(delete=False) as tmp_file_dest:
-    #             segment.export(tmp_file_dest.name, format='wav')
-    #             audio_file = open(tmp_file_dest.name, "rb")
-
-    #             transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    #             print('transcript: ', transcript)
-    #             bot.send_message(chat_dest, transcript)
     return "OK"
