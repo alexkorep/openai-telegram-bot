@@ -1,10 +1,10 @@
 import os
 from flask import Flask, request
 import telebot
+import openai
 import boto3
 import json
 from dotenv import load_dotenv
-import openai
 
 from handle_audio import handle_message_audio_or_voice
 from handle_text import handle_message_text
