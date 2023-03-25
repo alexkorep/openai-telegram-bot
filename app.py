@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from handle_audio import handle_message_audio_or_voice
 from handle_text import handle_message_text
 
+from history import create_dynamodb_table
+
 load_dotenv()
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -131,3 +133,4 @@ if TELEGRAM_API_KEY and WEBHOOK_HOST:
     if webhook_info.url != WEBHOOK_URL:
         # Set webhook
         bot.set_webhook(url=WEBHOOK_URL)
+    create_dynamodb_table()
