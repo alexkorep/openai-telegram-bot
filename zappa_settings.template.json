@@ -8,6 +8,7 @@
         "s3_bucket": "zappa-<RANDOM STRING>",
         "memory_size": 128,
         "log_level": "ERROR",
+        "layers": ["<ARN of ffmpeg lambda layer>"],
         "keep_warm": true,
         "aws_environment_variables": {
             "SQS_QUEUE_NAME": "<SQS NAME>"
