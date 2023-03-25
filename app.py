@@ -6,9 +6,12 @@ import boto3
 import json
 from dotenv import load_dotenv
 
+from handle_audio import handle_message_audio_or_voice
+from handle_text import handle_message_text
 
 load_dotenv()
 
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 TELEGRAM_API_KEY = os.environ.get("TELEGRAM_API_KEY")
 
@@ -20,7 +23,7 @@ SQS_QUEUE_NAME = os.environ.get(
 )  # should be the same as in Zappa settings
 USE_SQS = os.environ.get("USE_SQS", "True").lower() == "true"
 
-bot = telebot.TeleBot(TELEGRAM_API_KEY)
+bot = telebot.TeleBot(TELEGRAM_API_KEY, threaded=False)
 app = Flask(__name__)
 sqs = boto3.resource("sqs")
 
@@ -31,15 +34,25 @@ def index():
 
 
 @app.route("/{}".format(TELEGRAM_API_KEY), methods=["POST"])
-def telegram_webhook():
-    json_string = request.get_data().decode("utf-8")
-    update = telebot.types.Update.de_json(json_string)
-    message = update.message
-    if not message:
-        return "", 200
+def webhook():
+    try:
+        if request.headers.get("content-type") == "application/json":
+            json_string = request.get_data().decode("utf-8")
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_updates([update])
+            return ""
+        else:
+            return "OK"
+    except Exception as e:
+        print(e)
+        return "OK"
 
+
+
+@bot.message_handler(content_types=["text", "audio", "voice"])
+def handle_text(message):
     chat_dest = message.chat.id
-    user_msg = message.text
+    content_type = message.content_type
     user_username = message.from_user.username
     if not is_allowed_username(user_username):
         bot.send_message(chat_dest, "Sorry, you are not allowed to use this bot.")
@@ -47,14 +60,27 @@ def telegram_webhook():
 
     bot.send_chat_action(chat_id=chat_dest, action="typing", timeout=10)
 
-    body = {
-        "chat_dest": chat_dest,
-        "user_msg": user_msg,
-    }
-    if USE_SQS:
-        send_message_to_queue(body, SQS_QUEUE_NAME)
-    else:
-        handle_message(body)
+    try:
+        body = {
+            "content_type": content_type,
+            "chat_dest": chat_dest,
+        }
+        if content_type == "text":
+            body["text"] = message.text
+        if content_type == "audio":
+            body["file_id"] = message.audio.file_id
+            body["duration"] = message.audio.duration
+        elif content_type == "voice":
+            body["file_id"] = message.voice.file_id
+            body["duration"] = message.voice.duration
+
+        if USE_SQS:
+            send_message_to_queue(body, SQS_QUEUE_NAME)
+        else:
+            handle_message(body)
+    except Exception as exc:
+        exception_text = f"Error processing message: {exc}"
+        bot.send_message(chat_dest, exception_text)
 
     return "", 200
 
@@ -82,28 +108,26 @@ def send_message_to_queue(msg, queue_name):
 
 
 def process_messages(event, context):
-    body = json.loads(event["Records"][0]["body"])
-    handle_message(body)
+    for record in event["Records"]:
+        body = json.loads(record["body"])
+        handle_message(body)
 
 
 def handle_message(body):
-    user_msg = body["user_msg"]
+    content_type = body["content_type"]
     chat_dest = body["chat_dest"]
 
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": user_msg},
-        ],
-    )
-    text = response.choices[0].message.content
-    bot.send_message(chat_dest, text)
+    if content_type == "text":
+        handle_message_text(bot, openai, body)
+    elif content_type == "audio" or content_type == "voice":
+        handle_message_audio_or_voice(bot, openai, body)
+    else:
+        bot.send_message(chat_dest, "Sorry, this type of messages is not supported.")
 
-    return "OK"
 
 
 if TELEGRAM_API_KEY and WEBHOOK_HOST:
-    # Set webhook
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
+    webhook_info = bot.get_webhook_info()
+    if webhook_info.url != WEBHOOK_URL:
+        # Set webhook
+        bot.set_webhook(url=WEBHOOK_URL)
