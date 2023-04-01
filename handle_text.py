@@ -1,4 +1,5 @@
-from history import get_history, save_history
+from models.history import get_history, save_history
+from models.prompt import get_prompt
 
 # Number of messages to pass to OpenAI (if it fits in the token limit)
 HISTORY_LEN = 128
@@ -37,12 +38,16 @@ def make_history(chat_dest, text):
             # Remove the last message if it puts us over the limit
             messages.pop()
             break
+    prompt = get_prompt(chat_dest)
+    messages.append({"role": "system", "content": prompt})
     return messages[::-1]
 
 def handle_message_text(bot, openai, body):
     text = body["text"]
     chat_dest = body["chat_dest"]
     messages = make_history(chat_dest, text)
+
+    print("Sending to OpenAI:", messages)
 
     response = openai.ChatCompletion.create(
         model=MODEL_NAME,

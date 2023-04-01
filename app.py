@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 
 from handle_audio import handle_message_audio_or_voice
 from handle_text import handle_message_text
+from handle_prompt import handle_message_prompt
 
-from history import create_dynamodb_table
+from models.history import create_dynamodb_table_history
+from models.prompt import create_dynamodb_table_prompt
 
 load_dotenv()
 
@@ -50,6 +52,10 @@ def webhook():
         return "OK"
 
 
+@bot.message_handler(commands=['prompt'])
+def set_prompt(message):
+    handle_message_prompt(bot, message)
+
 
 @bot.message_handler(content_types=["text", "audio", "voice"])
 def handle_text(message):
@@ -57,7 +63,8 @@ def handle_text(message):
     content_type = message.content_type
     user_username = message.from_user.username
     if not is_allowed_username(user_username):
-        bot.send_message(chat_dest, "Sorry, you are not allowed to use this bot.")
+        bot.send_message(
+            chat_dest, "Sorry, you are not allowed to use this bot.")
         return "", 200
 
     bot.send_chat_action(chat_id=chat_dest, action="typing", timeout=10)
@@ -124,8 +131,8 @@ def handle_message(body):
     elif content_type == "audio" or content_type == "voice":
         handle_message_audio_or_voice(bot, openai, body)
     else:
-        bot.send_message(chat_dest, "Sorry, this type of messages is not supported.")
-
+        bot.send_message(
+            chat_dest, "Sorry, this type of messages is not supported.")
 
 
 if TELEGRAM_API_KEY and WEBHOOK_HOST:
@@ -133,4 +140,5 @@ if TELEGRAM_API_KEY and WEBHOOK_HOST:
     if webhook_info.url != WEBHOOK_URL:
         # Set webhook
         bot.set_webhook(url=WEBHOOK_URL)
-    create_dynamodb_table()
+    create_dynamodb_table_history()
+    create_dynamodb_table_prompt()

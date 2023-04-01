@@ -3,7 +3,8 @@ import time
 
 TABLE_NAME = "openai_telegram_bot_chat_history"
 
-def create_dynamodb_table():
+
+def create_dynamodb_table_history():
     """ Create a DynamoDB table to store the history 
         Table name: chat_history
         Primary key: chat_dest
@@ -16,7 +17,7 @@ def create_dynamodb_table():
     if TABLE_NAME in tables:
         print("DynamoDB historr table already exists")
         return
-    
+
     print("Creating DynamoDB table...")
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.create_table(
@@ -29,12 +30,12 @@ def create_dynamodb_table():
             {"AttributeName": "chat_dest", "AttributeType": "N"},
             {"AttributeName": "timestamp", "AttributeType": "N"},
         ],
-        ProvisionedThroughput={"ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
+        ProvisionedThroughput={
+            "ReadCapacityUnits": 5, "WriteCapacityUnits": 5},
     )
     print("Wating until the table is created...")
     table.meta.client.get_waiter("table_exists").wait(TableName=TABLE_NAME)
     print("Table status:", table.table_status)
-
 
 
 def save_history(chat_dest: str, message: str, is_user: bool):
@@ -50,6 +51,7 @@ def save_history(chat_dest: str, message: str, is_user: bool):
         }
     )
 
+
 def get_history(chat_dest: str, nunber_of_messages: int):
     """ Get the history of the chat 
         Return the history records sorted by timestamp in descending order (newest first)
@@ -57,8 +59,27 @@ def get_history(chat_dest: str, nunber_of_messages: int):
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(TABLE_NAME)
     response = table.query(
-        KeyConditionExpression=boto3.dynamodb.conditions.Key("chat_dest").eq(chat_dest),
+        KeyConditionExpression=boto3.dynamodb.conditions.Key(
+            "chat_dest").eq(chat_dest),
         ScanIndexForward=False,
         Limit=nunber_of_messages,
     )
     return response["Items"]
+
+
+def clear_history(chat_dest: str):
+    """ Delete all the messages for the chat """
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table(TABLE_NAME)
+    response = table.query(
+        KeyConditionExpression=boto3.dynamodb.conditions.Key(
+            "chat_dest").eq(chat_dest),
+    )
+    with table.batch_writer() as batch:
+        for each in response["Items"]:
+            batch.delete_item(
+                Key={
+                    "chat_dest": chat_dest,
+                    "timestamp": each["timestamp"],
+                }
+            )
