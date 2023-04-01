@@ -47,8 +47,6 @@ def handle_message_text(bot, openai, body):
     chat_dest = body["chat_dest"]
     messages = make_history(chat_dest, text)
 
-    print("Sending to OpenAI:", messages)
-
     response = openai.ChatCompletion.create(
         model=MODEL_NAME,
         messages=messages,

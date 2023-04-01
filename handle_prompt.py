@@ -6,12 +6,10 @@ def handle_message_prompt(bot, message):
     chat_dest = message.chat.id
     text = message.text
     text = text.replace("/prompt", "").strip()
-    print("New prompt:", text)
     if text:
         save_prompt(chat_dest, text)
         clear_history(chat_dest)
         bot.send_message(chat_dest, "The new prompt: " + text)
     else:
         prompt = get_prompt(chat_dest)
-        print("The prompt is: ", prompt)
         bot.send_message(chat_dest, "The prompt is: " + prompt)
