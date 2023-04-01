@@ -58,3 +58,13 @@ def get_prompt(chat_dest: str) -> str:
         return response["Item"]["prompt"]
     else:
         return ""
+
+def delete_prompt(chat_dest: str):
+    """ Delete the prompt from DynamoDB """
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table(TABLE_NAME)
+    table.delete_item(
+        Key={
+            "chat_dest": chat_dest,
+        }
+    )

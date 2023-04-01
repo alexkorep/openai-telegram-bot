@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from handle_audio import handle_message_audio_or_voice
 from handle_text import handle_message_text
-from handle_prompt import handle_message_prompt
+from handle_prompt import handle_message_prompt, handle_message_prompt_delete
 
 from models.history import create_dynamodb_table_history
 from models.prompt import create_dynamodb_table_prompt
@@ -55,6 +55,10 @@ def webhook():
 @bot.message_handler(commands=['prompt'])
 def set_prompt(message):
     handle_message_prompt(bot, message)
+
+@bot.message_handler(commands=['prompt_delete'])
+def set_prompt(message):
+    handle_message_prompt_delete(bot, message)
 
 
 @bot.message_handler(content_types=["text", "audio", "voice"])
