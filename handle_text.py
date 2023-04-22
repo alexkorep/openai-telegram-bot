@@ -1,5 +1,6 @@
 from models.history import get_history, save_history
 from models.prompt import get_prompt
+from consts import OPENAI_REQUEST_TIMEOUT
 
 # Number of messages to pass to OpenAI (if it fits in the token limit)
 HISTORY_LEN = 128
@@ -10,8 +11,6 @@ MODEL_TOKEN_LIMIT = 4096
 # How many tokens we reserve for the history. That means that
 # the model response will be cut to MODEL_TOKEN_LIMIT - MODEL_HISTORY_LIMIT tokens.
 MODEL_HISTORY_LIMIT = MODEL_TOKEN_LIMIT/2
-
-OPENAI_REQUEST_TIMEOUT = 20
 
 def num_tokens_from_messages(messages):
     """ Count the number of tokens in the messages """
