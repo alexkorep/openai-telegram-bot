@@ -11,6 +11,8 @@ MODEL_TOKEN_LIMIT = 4096
 # the model response will be cut to MODEL_TOKEN_LIMIT - MODEL_HISTORY_LIMIT tokens.
 MODEL_HISTORY_LIMIT = MODEL_TOKEN_LIMIT/2
 
+OPENAI_REQUEST_TIMEOUT = 20
+
 def num_tokens_from_messages(messages):
     """ Count the number of tokens in the messages """
     words = 0
@@ -50,6 +52,7 @@ def handle_message_text(bot, openai, body):
     response = openai.ChatCompletion.create(
         model=MODEL_NAME,
         messages=messages,
+        request_timeout=OPENAI_REQUEST_TIMEOUT,
     )
     content = response.choices[0].message.content
     bot.send_message(chat_dest, content)
