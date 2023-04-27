@@ -60,6 +60,7 @@ def webhook():
 def set_prompt(message):
     handle_message_prompt(bot, message)
 
+
 @bot.message_handler(commands=['prompt_delete'])
 def set_prompt(message):
     handle_message_prompt_delete(bot, message)
@@ -118,6 +119,7 @@ def send_message_to_queue(msg, queue_name):
     try:
         queue = sqs.get_queue_by_name(QueueName=queue_name)
         msg_txt = json.dumps(msg)
+        print("Sending message to queue", msg_txt)
         response = queue.send_message(MessageBody=msg_txt)
         return response.get("MessageId"), response.get("MD5OfMessageBody")
     except Exception as exc:
@@ -135,6 +137,7 @@ def handle_message(body):
     chat_dest = body["chat_dest"]
 
     if content_type == "text":
+        print('SQS handling message', body)
         handle_message_text(bot, openai, body)
     elif content_type == "audio" or content_type == "voice":
         handle_message_audio_or_voice(bot, openai, body)
