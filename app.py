@@ -34,7 +34,11 @@ sqs = boto3.resource("sqs")
 
 @app.route("/", methods=["GET", "HEAD"])
 def index():
-    return "OK" if TELEGRAM_API_KEY and WEBHOOK_HOST else "Not OK"
+    return {
+        "TELEGRAM_API_KEY": "OK" if TELEGRAM_API_KEY else "Not OK",
+        "WEBHOOK_HOST": "OK" if WEBHOOK_HOST else "Not OK",
+        "USE_SQS": USE_SQS,
+    }
 
 
 @app.route("/{}".format(TELEGRAM_API_KEY), methods=["POST"])
