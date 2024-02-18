@@ -7,6 +7,7 @@ import json
 from dotenv import load_dotenv
 
 from handle_audio import handle_message_audio_or_voice
+from handle_draw import handle_draw_request
 from handle_text import handle_message_text
 from handle_prompt import handle_message_prompt, handle_message_prompt_delete
 
@@ -135,10 +136,14 @@ def process_messages(event, context):
 def handle_message(body):
     content_type = body["content_type"]
     chat_dest = body["chat_dest"]
+    text = body["text"]
 
     if content_type == "text":
         print('SQS handling message', body)
-        handle_message_text(bot, openai, body)
+        if text.startswith("/draw"):
+            handle_draw_request(bot, openai, body)
+        else:
+            handle_message_text(bot, openai, body)
     elif content_type == "audio" or content_type == "voice":
         handle_message_audio_or_voice(bot, openai, body)
     else:
