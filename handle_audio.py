@@ -1,7 +1,7 @@
 import tempfile
 import subprocess
 
-MAX_DURATION = 60 * 1  # 1 minute
+MAX_DURATION = 60 * 10  # 10 minutes
 
 
 def handle_message_audio_or_voice(bot, openai, body):
@@ -38,7 +38,7 @@ def handle_message_audio_or_voice(bot, openai, body):
                     "-ac",
                     "2",
                     "-b:a",
-                    "192k",
+                    "32k",
                     temp_file_name,
                 ]
             )
