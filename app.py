@@ -136,7 +136,7 @@ def process_messages(event, context):
 def handle_message(body):
     content_type = body["content_type"]
     chat_dest = body["chat_dest"]
-    text = body["text"]
+    text = body["text"] if "text" in body else ""
 
     if content_type == "text":
         print('SQS handling message', body)
