@@ -6,7 +6,8 @@ from consts import OPENAI_REQUEST_TIMEOUT
 HISTORY_LEN = 128
 # Model to use
 #MODEL_NAME = "gpt-3.5-turbo"
-MODEL_NAME = "gpt-4-0125-preview"
+#MODEL_NAME = "gpt-4-0125-preview"
+MODEL_NAME = "gpt-4o"
 # Token limit for the model
 MODEL_TOKEN_LIMIT = 4096
 # How many tokens we reserve for the history. That means that
