@@ -10,6 +10,7 @@ HISTORY_LEN = 128
 MODEL_NAME = "gpt-4o"
 # Token limit for the model
 MODEL_TOKEN_LIMIT = 4096
+MAX_MESSAGES_HISTORY = 2
 # How many tokens we reserve for the history. That means that
 # the model response will be cut to MODEL_TOKEN_LIMIT - MODEL_HISTORY_LIMIT tokens.
 MODEL_HISTORY_LIMIT = MODEL_TOKEN_LIMIT/2
@@ -30,16 +31,20 @@ def make_history(chat_dest, text):
     # Messages are in reverse order, so add the current message first
     messages.append({"role": "user", "content": text})
     # The history in reverse order so that the most recent message is first
+    history_msg_count = 0
     for message in history:
         if message["is_user"]:
             role = "user"
         else:
             role = "assistant"
+        history_msg_count += 1
         messages.append({"role": role, "content": message["message"]})
         tokens = num_tokens_from_messages(messages)
         if tokens > MODEL_TOKEN_LIMIT - MODEL_HISTORY_LIMIT:
             # Remove the last message if it puts us over the limit
             messages.pop()
+            break
+        if history_msg_count >= MAX_MESSAGES_HISTORY:
             break
     prompt = get_prompt(chat_dest)
     messages.append({"role": "system", "content": prompt})
